@@ -239,6 +239,12 @@ services:
         echo "Launching Kafka Connect worker"
         /etc/confluent/docker/run
 
+  redis:
+    image: "redis:7.2.4"
+    container_name: "redis"
+    ports:
+    - "6379:6379"
+
 volumes:
   db-data:
     driver: local
