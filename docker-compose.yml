@@ -28,6 +28,7 @@ services:
       - SPRING_CLOUD_CONFIG_FAIL_FAST=true
       - SPRING_PROFILES_ACTIVE=prod
       - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
+      - ZIPKIN_URL=${ZIPKIN_URL}
 
   review-service:
     image: "review-service"
@@ -47,6 +48,7 @@ services:
       - DB_PASSWORD=${POSTGRES_DB_PASSWORD}
       - DB_URL=${REVIEW_DB_URL}
       - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
+      - ZIPKIN_URL=${ZIPKIN_URL}
 
   orders-service:
     image: "orders-service"
@@ -69,6 +71,7 @@ services:
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
       - SCHEMA_REGISTRY_URL=${SCHEMA_REGISTRY_URL}
       - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
+      - ZIPKIN_URL=${ZIPKIN_URL}
 
   dispatcher-service:
     image: "dispatcher-service"
@@ -103,25 +106,26 @@ services:
       - DB_PASSWORD=${POSTGRES_DB_PASSWORD}
       - DB_URL=${MENU_DB_URL}
       - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
+      - ZIPKIN_URL=${ZIPKIN_URL}
 
-  menu-service-2:
-    image: "menu-service"
-    container_name: "menu-service-2"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      config-server:
-        condition: service_healthy
-    ports:
-      - "9090:9091"
-    environment:
-      - CONFIGSERVER_IMPORT=configserver:${CONFIG_SERVER_URL}
-      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
-      - SPRING_PROFILES_ACTIVE=prod
-      - DB_USER=${POSTGRES_DB_USER}
-      - DB_PASSWORD=${POSTGRES_DB_PASSWORD}
-      - DB_URL=${MENU_DB_URL}
-      - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
+#  menu-service-2:
+#    image: "menu-service"
+#    container_name: "menu-service-2"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    ports:
+#      - "9090:9091"
+#    environment:
+#      - CONFIGSERVER_IMPORT=configserver:${CONFIG_SERVER_URL}
+#      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+#      - SPRING_PROFILES_ACTIVE=prod
+#      - DB_USER=${POSTGRES_DB_USER}
+#      - DB_PASSWORD=${POSTGRES_DB_PASSWORD}
+#      - DB_URL=${MENU_DB_URL}
+#      - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
 
   discovery-service:
     image: "discovery-service"
@@ -136,6 +140,22 @@ services:
       - SPRING_CLOUD_CONFIG_FAIL_FAST=true
       - SPRING_PROFILES_ACTIVE=prod
       - EUREKA_HOSTNAME=discovery-service
+
+  gateway-service:
+    image: "gateway-service"
+    container_name: "gateway-service"
+    ports:
+      - "9099:9099"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      - CONFIGSERVER_IMPORT=configserver:${CONFIG_SERVER_URL}Add commentMore actions
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+      - SPRING_PROFILES_ACTIVE=prod
+      - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - ZIPKIN_URL=${ZIPKIN_URL}
 
   postgres:
     image: "postgres:16.1"
@@ -244,6 +264,12 @@ services:
     container_name: "redis"
     ports:
     - "6379:6379"
+
+  zipkin:
+    image: "openzipkin/zipkin:3"
+    container_name: "zipkin"
+    ports:
+      - "9411:9411"
 
 volumes:
   db-data:
