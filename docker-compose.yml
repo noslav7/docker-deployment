@@ -49,6 +49,8 @@ services:
       - DB_URL=${REVIEW_DB_URL}
       - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
       - ZIPKIN_URL=${ZIPKIN_URL}
+      - KEYCLOAK_URL=${KEYCLOAK_URL}
+      - JWK_SET_URL=${JWK_SET_URL}
 
   orders-service:
     image: "orders-service"
@@ -72,6 +74,8 @@ services:
       - SCHEMA_REGISTRY_URL=${SCHEMA_REGISTRY_URL}
       - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
       - ZIPKIN_URL=${ZIPKIN_URL}
+      - KEYCLOAK_URL=${KEYCLOAK_URL}
+      - JWK_SET_URL=${JWK_SET_URL}
 
   dispatcher-service:
     image: "dispatcher-service"
@@ -107,6 +111,8 @@ services:
       - DB_URL=${MENU_DB_URL}
       - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
       - ZIPKIN_URL=${ZIPKIN_URL}
+      - KEYCLOAK_URL=${KEYCLOAK_URL}
+      - JWK_SET_URL=${JWK_SET_URL}
 
 #  menu-service-2:
 #    image: "menu-service"
@@ -149,6 +155,8 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
     environment:
       - CONFIGSERVER_IMPORT=configserver:${CONFIG_SERVER_URL}Add commentMore actions
       - SPRING_CLOUD_CONFIG_FAIL_FAST=true
@@ -156,6 +164,8 @@ services:
       - DISCOVERY_SERVICE_URL=${DISCOVERY_SERVICE_URL}
       - REDIS_HOST=${REDIS_HOST}
       - ZIPKIN_URL=${ZIPKIN_URL}
+      - KEYCLOAK_URL=${KEYCLOAK_URL}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
 
   postgres:
     image: "postgres:16.1"
@@ -270,6 +280,23 @@ services:
     container_name: "zipkin"
     ports:
       - "9411:9411"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: "keycloak"
+    command: start-dev # start keycloak in development mode
+    environment:
+      - KEYCLOAK_ADMIN=${KEYCLOAK_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_PASSWORD}
+      - KC_HOSTNAME=keycloak
+      - KC_HEALTH_ENABLED=true
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080;echo -e \"GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3" ]
+      interval: 5s
+      timeout: 5s
+      retries: 100
 
 volumes:
   db-data:
